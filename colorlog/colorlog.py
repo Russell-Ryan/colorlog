@@ -143,6 +143,10 @@ class ColorLog(object):
         if cls._instance is None:
             self=cls._instance=super(ColorLog,cls).__new__(cls)
             
+
+            self.logging=True
+            self.printing=True
+
             
             self.t0=default_timer()   # save teh start time
 
@@ -253,27 +257,41 @@ class ColorLog(object):
         if match:
             name=match.group(0)[1:-1]
             text=line[match.end(0):]        
-            if name in self.enabled:
-
-                if self.timestamp:
-                    now=datetime.now()
-                    date,time=now.strftime("%b/%d/%Y"),now.strftime("%H:%M:%S")
-                    log='[{} {}T{}] {}'.format(name,date,time,text)
+            #if name in self.enabled:
+            if name in self.levels:
+                if name in self.enabled:
+                    if self.timestamp:
+                        now=datetime.now()
+                        date=now.strftime("%b/%d/%Y")
+                        time=now.strftime("%H:%M:%S")
+                        log='[{} {}T{}] {}'.format(name,date,time,text)
+                    else:
+                        log='[{}] {}'.format(name,text)
+                        
+                    level,obj = self.levels[name]
+                    self._printer(obj.format(text))
+                    self._logger(log)
                 else:
-                    log='[{}] {}'.format(name,text)
-                    
-                level,obj = self.levels[name]
-                print(obj.format(text),file=self.stdout,end=self.end)
-                print(log,file=self.file,end=self.end)
+                    pass  # this level has been disabled, still prints a blank
+                          # line.  this is strange to me?
             else:
-                print(line,file=self.stdout,end=self.end)
-                print(line,file=self.file,end=self.end)
+                self._printer(line)
+                self._logger(line)
                 
         elif 'normal' in self.enabled:
-            print(line,file=self.stdout,end=self.end)
-            print(line,file=self.file,end=self.end)
+            self._printer(line)
+            self._logger(line)
 
 
+    def _printer(self,txt):
+        if self.printing:
+            print(txt,file=self.stdout,end=self.end)
+            
+    def _logger(self,txt):
+        if self.logging:
+            print(txt,file=self.file,end=self.end)
+            
+            
     def reopen(self):
         self.file=open(self.logfile,'a')
         self.stdout=sys.stdout
@@ -290,50 +308,8 @@ class ColorLog(object):
             self.write_footer()
             self.close()
 
-def test():
-     
-    print('[debug]debug')
-    print('[info]info')
-    print('[warn]warn')
-    print('[am]alarm')
-    print('nothing')
-    for i in tqdm.tqdm(range(10)):
-        time.sleep(0.1)
-        print('[info]{}'.format(i))
-
-
-        
-if __name__=='__main__':
-
-    import tqdm
-    import time
-
-
-
-    try:
-        inspect.builtins.print=tqdm.tqdm.write
-    except:
-        pass
-
+    def __getitem__(self,k):
+        return self.levels[k][1]
 
     
-    t0=default_timer()
-
-    log=ColorLog(timestamp=False)
-    
-    log.disable('normal')
-
-    
-
-    test()
-    
-    log.close()
-    test()
-
-    log.reopen()
-    test()
-    
-
-    
-    #sys.__stdout__.write(str(t1-t0))
-   
+           
