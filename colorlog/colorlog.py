@@ -28,7 +28,7 @@ class ColorLog(dict):
 
     
     NUM=74        # number of characters to print to file    
-    def __init__(self,root=None,timestamp=True,stdout=True,stderr=True):  
+    def __init__(self,root=None,timestamp=True,stdout=True,stderr=False):  
         
         # get the starting time
         self.t0=default_timer()
@@ -70,13 +70,16 @@ class ColorLog(dict):
         self.addlevel('alarm',foreground='red',blink=True)
         self.addlevel('debug',foreground='blue',italic=True)
 
+
         # do we write to STDOUT?
-        self.stdout=Device(sys.stdout,enabled=stdout)
-        sys.stdout=self
+        if stdout:
+            self.stdout=Device(sys.stdout,enabled=stdout)
+            sys.stdout=self
                 
         # do we write to STDERR
-        self.stderr=Device(sys.stderr,enabled=stderr)
-        sys.stderr=self
+        if stderr:
+            self.stderr=Device(sys.stderr,enabled=stderr)
+            sys.stderr=self
 
             
     def addlevel(self,name,**kwargs):
@@ -110,7 +113,7 @@ class ColorLog(dict):
         match=self.regex.match(line)
         if match:
             level=match.group(0)[1:-1]
-            text=line[match.end(0):]           
+            text=line[match.end(0):]        
             if level in self:
                 self.stdout.write(self[level](text))
 
@@ -142,7 +145,9 @@ class ColorLog(dict):
         self.writeLine(' ')
         self.logfile.write(' +-'+self.NUM*'-'+'-+ \n')
         self.logfile.device.close()
-        sys.stdout=self.stdout.device
-        sys.stderr=self.stderr.device
+        if hasattr(self,'stdout'):
+            sys.stdout=self.stdout.device
+        if hasattr(self,'stderr'):
+            sys.stderr=self.stderr.device
 
 

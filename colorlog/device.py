@@ -9,7 +9,8 @@ class Device(object):
     
     def write(self,text):
         if self.enabled:
-            self._device.write(text)
+            print(text,file=self._device)
+            #self._device.write(text)
 
     def enable(self):
         self.enabled=True
