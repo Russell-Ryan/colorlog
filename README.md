@@ -1,6 +1,7 @@
 # ColorLog
 
 
+[![Build Status](https://travis-ci.org/Russell-Ryan/colorlog.svg?branch=master)](https://travis-ci.org/Russell-Ryan/colorlog)
 
 
 ## example usage
