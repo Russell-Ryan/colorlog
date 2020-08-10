@@ -3,46 +3,83 @@
 
 [![Build Status](https://travis-ci.org/Russell-Ryan/colorlog.svg?branch=master)](https://travis-ci.org/Russell-Ryan/colorlog)
 
+This is a logging utility that captures redirects content to STDOUT to a log-file and to STDOUT.  Therefore, if some subroutine issues a normal print statement, then that content is printed to the screen ***and*** to the logfile!  It also colorizes some text to make things a bit clearer.  
+
+
+Below is an example of most of the functionality.
+
+
 
 ## example usage
 
 ```
-import colorlog
+from colorlog import ColorLog
+import sys
 
-# create the log
-log=colorlog.ColorLog(root='test')
+def test():
 
-# show the standard levels
-print('[info]an informational message')
-print('[warn]an warning message')
-print('[alarm]an alarm')
-print('[debug]a debugging message')
-print('basic printing')
+    # get the name of the log (to make changes)
+    log=ColorLog(root='test_colorlog')
 
-# add a personal level
-log.addlevel('mine',foreground='magenta')
-print('[mine]personal message')
+    # show the standard levels
+    print('[info]an informational message')
+    print('[warn]an warning message')
+    print('[alarm]an alarm')
+    print('[debug]a debugging message')
+    print('basic printing')
 
-# change the formatting of an existing level
-log['info']['underline']=True
-print('[info]a changed, informational message')
+    # add a personal level
+    log.add_level('mine',foreground='magenta')
+    print('[mine]personal message')
 
-# change the color of an existing level
-log['info']['foreground']='white'
-print('[info]another changed, informational message')
+    # change the formatting of an existing level
+    log['info']['underline']=True
+    print('[info]a changed, informational message')
 
-# turn off the ascii logging
-log.logfile.disable()
-print('[warn]hide a message from the logfile')
-log.logfile.enable()
+    # change the color of an existing level
+    log['info']['foreground']='white'
+    print('[info]another changed, informational message')
+
+    # turn off the ascii logging
+    log.logging=False
+    print('[warn]hide a message from the logfile, but show to terminal')
+    log.logging=True  # ok turn it back on
     
-# turn off the STDOUT
-log.stdout.disable()
-print('suppress STDout')
-log.stdout.enable()
-print("and... we're back")
+    # turn off the STDOUT
+    log.printing=False
+    print('suppressed STDout')
+    log.printing=True
+    print("and... we're back")
 
-# raise an error and see that the log is updated too!
-raise RuntimeError('this is an exception')
+    # maybe you don't like the timestamps?  turn them off:
+    log.timestamp=False
+    print('[info]no timestamps now')
 
+
+    # you can even close, and reopen the file
+    log.close()
+    print('nothing gets logged, since the file is closed')
+    log.reopen()
+    print("and we're back after closing")
+
+    # you can disable certain modes.
+    log.disable('debug') # turns off the debugging level
+    print("[debug]nothing happened, since this is off")
+    # well, there's an issue yet to be dealt with where it prints a blank line.
+
+    # it works with tqdm, sort-of
+    import tqdm
+    import inspect
+    import time
+    inspect.builtins.print=tqdm.tqdm.write   # need to do this :(
+
+    for i in tqdm.tqdm(range(10)):
+        time.sleep(0.1)
+        print('[info]{}'.format(i))
+
+
+if __name__=='__main__':
+
+    test()
+    
 ```
